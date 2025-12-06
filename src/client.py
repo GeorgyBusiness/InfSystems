@@ -1,3 +1,6 @@
+import re
+
+
 class Client:
     def __init__(
         self,
@@ -29,6 +32,32 @@ class Client:
         self._house = house
         self._total_spending = total_spending
 
+    # Статические методы валидации
+    @staticmethod
+    def validate_email(email: str) -> bool:
+        """Проверка email с помощью регулярного выражения."""
+        if not isinstance(email, str):
+            return False
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return re.match(pattern, email) is not None
+
+    @staticmethod
+    def validate_phone(phone: str) -> bool:
+        """Проверка формата телефона 7XXXXXXXXXX (11 цифр, начинается с 7)."""
+        if not isinstance(phone, str):
+            return False
+        pattern = r'^7\d{10}$'
+        return re.match(pattern, phone) is not None
+
+    @staticmethod
+    def validate_name(name: str) -> bool:
+        """Проверка что строка не пустая и состоит из букв (допускаются пробелы и дефисы)."""
+        if not isinstance(name, str) or not name.strip():
+            return False
+        # Разрешаем буквы (включая кириллицу), пробелы и дефисы
+        pattern = r'^[a-zA-Zа-яА-ЯёЁ\s\-]+$'
+        return re.match(pattern, name) is not None
+
     # Геттеры и сеттеры для id
     @property
     def id(self) -> int:
@@ -36,6 +65,10 @@ class Client:
 
     @id.setter
     def id(self, value: int):
+        if not isinstance(value, int):
+            raise ValueError(f"ID должен быть целым числом, получено: {type(value).__name__}")
+        if value <= 0:
+            raise ValueError(f"ID должен быть положительным числом, получено: {value}")
         self._id = value
 
     # Геттеры и сеттеры для last_name
@@ -45,6 +78,8 @@ class Client:
 
     @last_name.setter
     def last_name(self, value: str):
+        if not self.validate_name(value):
+            raise ValueError(f"Фамилия должна быть непустой строкой из букв, получено: '{value}'")
         self._last_name = value
 
     # Геттеры и сеттеры для first_name
@@ -54,6 +89,8 @@ class Client:
 
     @first_name.setter
     def first_name(self, value: str):
+        if not self.validate_name(value):
+            raise ValueError(f"Имя должно быть непустой строкой из букв, получено: '{value}'")
         self._first_name = value
 
     # Геттеры и сеттеры для patronymic
@@ -63,6 +100,8 @@ class Client:
 
     @patronymic.setter
     def patronymic(self, value: str):
+        if not self.validate_name(value):
+            raise ValueError(f"Отчество должно быть непустой строкой из букв, получено: '{value}'")
         self._patronymic = value
 
     # Геттеры и сеттеры для phone
@@ -72,6 +111,8 @@ class Client:
 
     @phone.setter
     def phone(self, value: str):
+        if not self.validate_phone(value):
+            raise ValueError(f"Телефон должен быть в формате 7XXXXXXXXXX, получено: '{value}'")
         self._phone = value
 
     # Геттеры и сеттеры для email
@@ -81,6 +122,8 @@ class Client:
 
     @email.setter
     def email(self, value: str):
+        if not self.validate_email(value):
+            raise ValueError(f"Неверный формат email, получено: '{value}'")
         self._email = value
 
     # Геттеры и сеттеры для passport_series
@@ -90,6 +133,8 @@ class Client:
 
     @passport_series.setter
     def passport_series(self, value: str):
+        if not isinstance(value, str) or not value.isdigit() or len(value) != 4:
+            raise ValueError(f"Серия паспорта должна быть строкой из 4 цифр, получено: '{value}'")
         self._passport_series = value
 
     # Геттеры и сеттеры для passport_number
@@ -99,6 +144,8 @@ class Client:
 
     @passport_number.setter
     def passport_number(self, value: str):
+        if not isinstance(value, str) or not value.isdigit() or len(value) != 6:
+            raise ValueError(f"Номер паспорта должен быть строкой из 6 цифр, получено: '{value}'")
         self._passport_number = value
 
     # Геттеры и сеттеры для zip_code
@@ -108,6 +155,10 @@ class Client:
 
     @zip_code.setter
     def zip_code(self, value: int):
+        if not isinstance(value, int):
+            raise ValueError(f"Почтовый индекс должен быть целым числом, получено: {type(value).__name__}")
+        if value < 100000 or value > 999999:
+            raise ValueError(f"Почтовый индекс должен быть 6-значным числом, получено: {value}")
         self._zip_code = value
 
     # Геттеры и сеттеры для city
@@ -117,6 +168,8 @@ class Client:
 
     @city.setter
     def city(self, value: str):
+        if not self.validate_name(value):
+            raise ValueError(f"Город должен быть непустой строкой из букв, получено: '{value}'")
         self._city = value
 
     # Геттеры и сеттеры для street
@@ -126,6 +179,8 @@ class Client:
 
     @street.setter
     def street(self, value: str):
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"Улица должна быть непустой строкой, получено: '{value}'")
         self._street = value
 
     # Геттеры и сеттеры для house
@@ -135,6 +190,8 @@ class Client:
 
     @house.setter
     def house(self, value: str):
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"Номер дома должен быть непустой строкой, получено: '{value}'")
         self._house = value
 
     # Геттеры и сеттеры для total_spending
@@ -144,5 +201,9 @@ class Client:
 
     @total_spending.setter
     def total_spending(self, value: float):
-        self._total_spending = value
+        if not isinstance(value, (int, float)):
+            raise ValueError(f"Сумма трат должна быть числом, получено: {type(value).__name__}")
+        if value < 0:
+            raise ValueError(f"Сумма трат не может быть отрицательной, получено: {value}")
+        self._total_spending = float(value)
 
