@@ -1,4 +1,5 @@
 import re
+import json
 
 
 class Client:
@@ -32,6 +33,54 @@ class Client:
         self.street = street
         self.house = house
         self.total_spending = total_spending
+
+    @classmethod
+    def from_json(cls, json_str: str):
+        """
+        Создает объект Client из JSON строки.
+        
+        Args:
+            json_str: JSON строка с данными клиента
+            
+        Returns:
+            Client: новый объект клиента
+        """
+        data = json.loads(json_str)
+        return cls(**data)
+
+    @classmethod
+    def from_string(cls, str_data: str, delimiter: str = ','):
+        """
+        Создает объект Client из строки с разделителем.
+        
+        Args:
+            str_data: строка с данными в формате "id,last_name,first_name,..."
+            delimiter: разделитель (по умолчанию запятая)
+            
+        Returns:
+            Client: новый объект клиента
+        """
+        parts = str_data.split(delimiter)
+        
+        if len(parts) != 13:
+            raise ValueError(f"Ожидается 13 полей, получено: {len(parts)}")
+        
+        # Приводим типы данных
+        return cls(
+            id=int(parts[0]),
+            last_name=parts[1].strip(),
+            first_name=parts[2].strip(),
+            patronymic=parts[3].strip(),
+            phone=parts[4].strip(),
+            email=parts[5].strip(),
+            passport_series=parts[6].strip(),
+            passport_number=parts[7].strip(),
+            zip_code=int(parts[8]),
+            city=parts[9].strip(),
+            street=parts[10].strip(),
+            house=parts[11].strip(),
+            total_spending=float(parts[12])
+        )
 
     # Статические методы валидации
     @staticmethod
