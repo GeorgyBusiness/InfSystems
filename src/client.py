@@ -150,8 +150,11 @@ class Client:
 
     @patronymic.setter
     def patronymic(self, value: str):
-        if not self.validate_name(value):
-            raise ValueError(f"Отчество должно быть непустой строкой из букв, получено: '{value}'")
+        # Отчество может быть пустой строкой (если у клиента его нет)
+        if not isinstance(value, str):
+            raise ValueError(f"Отчество должно быть строкой, получено: {type(value).__name__}")
+        if value and not self.validate_name(value):
+            raise ValueError(f"Отчество должно состоять из букв, получено: '{value}'")
         self._patronymic = value
 
     # Геттеры и сеттеры для phone
@@ -256,4 +259,35 @@ class Client:
         if value < 0:
             raise ValueError(f"Сумма трат не может быть отрицательной, получено: {value}")
         self._total_spending = float(value)
+
+    def __str__(self) -> str:
+        """Возвращает строковое представление объекта Client."""
+        # Формируем ФИО (без лишнего пробела, если отчество пустое)
+        if self.patronymic:
+            full_name = f"{self.last_name} {self.first_name} {self.patronymic}"
+        else:
+            full_name = f"{self.last_name} {self.first_name}"
+        
+        return (
+            f"Client ID: {self.id}\n"
+            f"ФИО: {full_name}\n"
+            f"Телефон: {self.phone}\n"
+            f"Email: {self.email}\n"
+            f"Паспорт: {self.passport_series} {self.passport_number}\n"
+            f"Адрес: {self.zip_code}, г. {self.city}, ул. {self.street}, д. {self.house}\n"
+            f"Общая сумма покупок: {self.total_spending:.2f} руб."
+        )
+
+    def __eq__(self, other) -> bool:
+        """Сравнивает два объекта Client на равенство."""
+        if not isinstance(other, Client):
+            return False
+        
+        # Если у обоих объектов есть валидный id, сравниваем по id
+        if hasattr(self, '_id') and hasattr(other, '_id'):
+            if self._id is not None and self._id > 0 and other._id is not None and other._id > 0:
+                return self._id == other._id
+        
+        # Иначе сравниваем по email и phone (уникальные идентификаторы)
+        return self.email == other.email and self.phone == other.phone
 
