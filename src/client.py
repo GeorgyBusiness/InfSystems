@@ -18,19 +18,20 @@ class Client:
         house: str,
         total_spending: float
     ):
-        self._id = id
-        self._last_name = last_name
-        self._first_name = first_name
-        self._patronymic = patronymic
-        self._phone = phone
-        self._email = email
-        self._passport_series = passport_series
-        self._passport_number = passport_number
-        self._zip_code = zip_code
-        self._city = city
-        self._street = street
-        self._house = house
-        self._total_spending = total_spending
+        # Используем свойства (сеттеры) для автоматической валидации
+        self.id = id
+        self.last_name = last_name
+        self.first_name = first_name
+        self.patronymic = patronymic
+        self.phone = phone
+        self.email = email
+        self.passport_series = passport_series
+        self.passport_number = passport_number
+        self.zip_code = zip_code
+        self.city = city
+        self.street = street
+        self.house = house
+        self.total_spending = total_spending
 
     # Статические методы валидации
     @staticmethod
