@@ -2,7 +2,63 @@ import re
 import json
 
 
-class Client:
+class ClientBase:
+    """
+    Базовый класс для всех клиентских сущностей.
+    
+    Содержит общую функциональность: управление ID и статические методы валидации.
+    """
+    
+    def __init__(self, id: int):
+        """
+        Инициализирует базовый объект с ID.
+        
+        Args:
+            id: уникальный идентификатор клиента
+        """
+        self.id = id
+    
+    # Статические методы валидации
+    @staticmethod
+    def validate_email(email: str) -> bool:
+        """Проверка email с помощью регулярного выражения."""
+        if not isinstance(email, str):
+            return False
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return re.match(pattern, email) is not None
+
+    @staticmethod
+    def validate_phone(phone: str) -> bool:
+        """Проверка формата телефона 7XXXXXXXXXX (11 цифр, начинается с 7)."""
+        if not isinstance(phone, str):
+            return False
+        pattern = r'^7\d{10}$'
+        return re.match(pattern, phone) is not None
+
+    @staticmethod
+    def validate_name(name: str) -> bool:
+        """Проверка что строка не пустая и состоит из букв (допускаются пробелы и дефисы)."""
+        if not isinstance(name, str) or not name.strip():
+            return False
+        # Разрешаем буквы (включая кириллицу), пробелы и дефисы
+        pattern = r'^[a-zA-Zа-яА-ЯёЁ\s\-]+$'
+        return re.match(pattern, name) is not None
+
+    # Геттеры и сеттеры для id
+    @property
+    def id(self) -> int:
+        return self._id
+
+    @id.setter
+    def id(self, value: int):
+        if not isinstance(value, int):
+            raise ValueError(f"ID должен быть целым числом, получено: {type(value).__name__}")
+        if value <= 0:
+            raise ValueError(f"ID должен быть положительным числом, получено: {value}")
+        self._id = value
+
+
+class Client(ClientBase):
     def __init__(
         self,
         id: int,
@@ -19,8 +75,10 @@ class Client:
         house: str,
         total_spending: float
     ):
+        # Вызываем конструктор родителя для инициализации id
+        super().__init__(id)
+        
         # Используем свойства (сеттеры) для автоматической валидации
-        self.id = id
         self.last_name = last_name
         self.first_name = first_name
         self.patronymic = patronymic
@@ -106,45 +164,6 @@ class Client:
             house=parts[11].strip(),
             total_spending=float(parts[12])
         )
-
-    # Статические методы валидации
-    @staticmethod
-    def validate_email(email: str) -> bool:
-        """Проверка email с помощью регулярного выражения."""
-        if not isinstance(email, str):
-            return False
-        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-        return re.match(pattern, email) is not None
-
-    @staticmethod
-    def validate_phone(phone: str) -> bool:
-        """Проверка формата телефона 7XXXXXXXXXX (11 цифр, начинается с 7)."""
-        if not isinstance(phone, str):
-            return False
-        pattern = r'^7\d{10}$'
-        return re.match(pattern, phone) is not None
-
-    @staticmethod
-    def validate_name(name: str) -> bool:
-        """Проверка что строка не пустая и состоит из букв (допускаются пробелы и дефисы)."""
-        if not isinstance(name, str) or not name.strip():
-            return False
-        # Разрешаем буквы (включая кириллицу), пробелы и дефисы
-        pattern = r'^[a-zA-Zа-яА-ЯёЁ\s\-]+$'
-        return re.match(pattern, name) is not None
-
-    # Геттеры и сеттеры для id
-    @property
-    def id(self) -> int:
-        return self._id
-
-    @id.setter
-    def id(self, value: int):
-        if not isinstance(value, int):
-            raise ValueError(f"ID должен быть целым числом, получено: {type(value).__name__}")
-        if value <= 0:
-            raise ValueError(f"ID должен быть положительным числом, получено: {value}")
-        self._id = value
 
     # Геттеры и сеттеры для last_name
     @property
@@ -317,7 +336,7 @@ class Client:
         return self.email == other.email and self.phone == other.phone
 
 
-class ClientShort:
+class ClientShort(ClientBase):
     """
     Краткая версия данных клиента для упрощенного представления.
     
@@ -332,7 +351,9 @@ class ClientShort:
         Args:
             client: объект типа Client
         """
-        self._id = client.id
+        # Вызываем конструктор родителя для инициализации id
+        super().__init__(client.id)
+        
         self._total_spending = client.total_spending
         
         # Формируем полное имя в виде "Фамилия И.О." или "Фамилия И."
@@ -349,11 +370,6 @@ class ClientShort:
         
         # Берем телефон, если его нет (что невозможно по валидации), берем email
         self._contact = client.phone if client.phone else client.email
-    
-    @property
-    def id(self) -> int:
-        """Возвращает ID клиента."""
-        return self._id
     
     @property
     def fullname(self) -> str:
@@ -377,4 +393,3 @@ class ClientShort:
             f"Связь: {self.contact}, "
             f"Баланс: {self.total_spending}"
         )
-
