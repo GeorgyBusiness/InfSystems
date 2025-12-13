@@ -34,6 +34,31 @@ class Client:
         self.house = house
         self.total_spending = total_spending
 
+    def __repr__(self) -> str:
+        """
+        Возвращает строку, которая выглядит как вызов конструктора.
+        
+        Returns:
+            str: представление объекта в виде "Client(id=1, last_name='Ivanov', ...)"
+        """
+        return (
+            f"Client("
+            f"id={self.id}, "
+            f"last_name={self.last_name!r}, "
+            f"first_name={self.first_name!r}, "
+            f"patronymic={self.patronymic!r}, "
+            f"phone={self.phone!r}, "
+            f"email={self.email!r}, "
+            f"passport_series={self.passport_series!r}, "
+            f"passport_number={self.passport_number!r}, "
+            f"zip_code={self.zip_code}, "
+            f"city={self.city!r}, "
+            f"street={self.street!r}, "
+            f"house={self.house!r}, "
+            f"total_spending={self.total_spending}"
+            f")"
+        )
+
     @classmethod
     def from_json(cls, json_str: str):
         """
@@ -290,4 +315,66 @@ class Client:
         
         # Иначе сравниваем по email и phone (уникальные идентификаторы)
         return self.email == other.email and self.phone == other.phone
+
+
+class ClientShort:
+    """
+    Краткая версия данных клиента для упрощенного представления.
+    
+    Содержит только основную информацию: ID, ФИО (сокращенно),
+    один контакт и сумму трат.
+    """
+    
+    def __init__(self, client: Client):
+        """
+        Создает краткую версию клиента.
+        
+        Args:
+            client: объект типа Client
+        """
+        self._id = client.id
+        self._total_spending = client.total_spending
+        
+        # Формируем полное имя в виде "Фамилия И.О." или "Фамилия И."
+        if client.patronymic:
+            # Если есть отчество: "Фамилия И.О."
+            self._fullname = (
+                f"{client.last_name} "
+                f"{client.first_name[0]}. "
+                f"{client.patronymic[0]}."
+            )
+        else:
+            # Если отчества нет: "Фамилия И."
+            self._fullname = f"{client.last_name} {client.first_name[0]}."
+        
+        # Берем телефон, если его нет (что невозможно по валидации), берем email
+        self._contact = client.phone if client.phone else client.email
+    
+    @property
+    def id(self) -> int:
+        """Возвращает ID клиента."""
+        return self._id
+    
+    @property
+    def fullname(self) -> str:
+        """Возвращает полное имя в формате 'Фамилия И.О.' или 'Фамилия И.'"""
+        return self._fullname
+    
+    @property
+    def contact(self) -> str:
+        """Возвращает основной контакт (телефон или email)."""
+        return self._contact
+    
+    @property
+    def total_spending(self) -> float:
+        """Возвращает общую сумму трат клиента."""
+        return self._total_spending
+    
+    def __str__(self) -> str:
+        """Возвращает краткое строковое представление объекта ClientShort."""
+        return (
+            f"ShortClient: {self.fullname}, "
+            f"Связь: {self.contact}, "
+            f"Баланс: {self.total_spending}"
+        )
 
