@@ -361,7 +361,7 @@ class ClientShort(ClientBase):
             # Если есть отчество: "Фамилия И.О."
             self._fullname = (
                 f"{client.last_name} "
-                f"{client.first_name[0]}. "
+                f"{client.first_name[0]}."
                 f"{client.patronymic[0]}."
             )
         else:
