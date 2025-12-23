@@ -159,6 +159,7 @@ class ClientView(AbstractObserver):
             <td>
                 <a href="/client/{client.id}" target="_blank" style="margin-right: 10px;">Подробнее</a>
                 <a href="/edit/{client.id}" style="margin-right: 10px;">Редактировать</a>
+                <a href="/delete/{client.id}" style="color: #dc3545; margin-right: 10px;" onclick="return confirm('Вы уверены, что хотите удалить этого клиента?');">Удалить</a>
             </td>
         </tr>
 """

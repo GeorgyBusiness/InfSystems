@@ -9,7 +9,7 @@ from src.core.db_manager import DB_manager
 from src.repositories.client_rep_db import Client_rep_db
 from src.repositories.client_rep_db_adapter import Client_rep_db_adapter
 from src.mvc.client_view import ClientView
-from src.mvc.client_controller import ClientController, ClientAddController, ClientEditController
+from src.mvc.client_controller import ClientController, ClientAddController, ClientEditController, ClientDeleteController
 
 
 # Параметры подключения к базе данных
@@ -51,6 +51,9 @@ def create_app() -> Flask:
         
         # 6. Создаем контроллер редактирования
         edit_controller = ClientEditController(repo, view)
+        
+        # 7. Создаем контроллер удаления
+        delete_controller = ClientDeleteController(repo)
         
     except Exception as e:
         print(f"❌ Ошибка инициализации приложения: {e}")
@@ -167,6 +170,23 @@ def create_app() -> Flask:
         
         # GET: отображаем форму редактирования
         return render_template_string(edit_controller.get_edit_form(client_id))
+    
+    @app.route('/delete/<int:client_id>')
+    def delete_client(client_id: int):
+        """
+        Удаляет клиента по ID и перенаправляет на главную страницу.
+        
+        Args:
+            client_id: ID клиента для удаления
+            
+        Returns:
+            Редирект на главную страницу (/)
+        """
+        # Удаляем клиента
+        success = delete_controller.delete_client(client_id)
+        
+        # В любом случае редирект на главную
+        return redirect(url_for('index'))
     
     return app
 

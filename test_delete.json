@@ -1,0 +1,17 @@
+[
+  {
+    "id": 2,
+    "last_name": "Петров",
+    "first_name": "Петр",
+    "patronymic": "Сергеевич",
+    "phone": "79992345678",
+    "email": "petr@mail.ru",
+    "passport_series": "5678",
+    "passport_number": "901234",
+    "zip_code": 234567,
+    "city": "Санкт-Петербург",
+    "street": "Невского",
+    "house": "25",
+    "total_spending": 10000.75
+  }
+]

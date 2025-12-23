@@ -386,3 +386,47 @@ class ClientEditController:
             
             return f"<h1>Ошибка</h1><p>Ошибка обновления: {str(e)}</p>"
 
+
+class ClientDeleteController:
+    """
+    Контроллер для удаления клиентов.
+    
+    Управляет удалением записей о клиентах из репозитория.
+    """
+    
+    def __init__(self, repo: Client_rep_base) -> None:
+        """
+        Инициализирует контроллер удаления с репозиторием.
+        
+        Args:
+            repo: Объект репозитория для удаления данных
+        """
+        self.repo = repo
+    
+    def delete_client(self, client_id: int) -> bool:
+        """
+        Удаляет клиента из репозитория по его ID.
+        
+        Args:
+            client_id: ID клиента для удаления
+            
+        Returns:
+            True если удаление прошло успешно, False если произошла ошибка
+        """
+        try:
+            # Вызываем метод удаления из репозитория
+            self.repo.delete_by_id(client_id)
+            
+            # Уведомляем наблюдателей об изменении
+            self.repo.notify(f"Клиент с ID {client_id} был удален")
+            
+            return True
+        except ValueError as e:
+            # Клиент не найден
+            print(f"Ошибка при удалении клиента: {e}")
+            return False
+        except Exception as e:
+            # Неожиданная ошибка
+            print(f"Неожиданная ошибка при удалении клиента: {e}")
+            return False
+

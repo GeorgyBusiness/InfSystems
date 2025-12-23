@@ -23,16 +23,10 @@ classDiagram
     class Client {
         +last_name: str
         +first_name: str
-        +patronymic: str
         +phone: str
         +email: str
-        +passport_series: str
-        +passport_number: str
-        +zip_code: int
-        +city: str
-        +street: str
-        +house: str
         +total_spending: float
+        ...
         +from_json(json)$
         +from_string(str)$
     }
@@ -53,7 +47,6 @@ classDiagram
         +delete_by_id(id)
         +get_k_n_short_list(k, n)
         #_load_from_file()*
-        #_save_to_file()*
     }
 
     class Client_rep_db_adapter {
@@ -61,14 +54,14 @@ classDiagram
         +get_by_id(id)
         +add(client)
         +replace_by_id(id, client)
-        +get_k_n_short_list(k, n)
+        +delete_by_id(id)
     }
 
     class Client_rep_db {
         -db_manager: DB_manager
         +get_by_id(id)
         +add(client)
-        +replace_by_id(id, client)
+        +delete_by_id(id)
     }
 
     class DB_manager {
@@ -84,8 +77,7 @@ classDiagram
         +update(data)
         +render_main_page(clients)
         +render_client_details(client)
-        +render_add_client_page(errors, data)
-        +render_edit_client_page(client, errors)
+        +render_client_form(title, button_text, action_url, client, errors)
     }
 
     %% --- MVC: КОНТРОЛЛЕРЫ (CONTROLLERS) ---
@@ -110,6 +102,11 @@ classDiagram
         +update_client(id, data)
     }
 
+    class ClientDeleteController {
+        -repo: Client_rep_base
+        +delete_client(id)
+    }
+
     %% --- СВЯЗИ (RELATIONSHIPS) ---
     
     %% Реализация Observer
@@ -125,7 +122,7 @@ classDiagram
     ClientBase <|-- Client
     ClientBase <|-- ClientShort
     
-    %% MVC Агрегация
+    %% MVC Агрегация (Контроллеры знают о Repo и View)
     ClientController o-- Client_rep_base
     ClientController o-- ClientView
     
@@ -134,7 +131,11 @@ classDiagram
     
     ClientEditController o-- Client_rep_base
     ClientEditController o-- ClientView
+
+    ClientDeleteController o-- Client_rep_base
     
-    %% Зависимости (Dependency)
-    ClientAddController ..> Client : валидирует через создание
-    ClientEditController ..> Client : валидирует через создание
+    %% Зависимости (Использование классов)
+    ClientAddController ..> Client : создает/валидирует
+    ClientEditController ..> Client : создает/валидирует
+    ClientView ..> ClientShort : отображает список
+    ClientView ..> Client : отображает анкету
