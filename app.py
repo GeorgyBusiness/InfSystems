@@ -9,7 +9,7 @@ from src.core.db_manager import DB_manager
 from src.repositories.client_rep_db import Client_rep_db
 from src.repositories.client_rep_db_adapter import Client_rep_db_adapter
 from src.mvc.client_view import ClientView
-from src.mvc.client_controller import ClientController, ClientAddController
+from src.mvc.client_controller import ClientController, ClientAddController, ClientEditController
 
 
 # Параметры подключения к базе данных
@@ -48,6 +48,9 @@ def create_app() -> Flask:
         
         # 5. Создаем контроллер добавления
         add_controller = ClientAddController(repo, view)
+        
+        # 6. Создаем контроллер редактирования
+        edit_controller = ClientEditController(repo, view)
         
     except Exception as e:
         print(f"❌ Ошибка инициализации приложения: {e}")
@@ -118,6 +121,52 @@ def create_app() -> Flask:
         
         # GET: отображаем пустую форму
         return render_template_string(add_controller.get_form())
+    
+    @app.route('/edit/<int:client_id>', methods=['GET', 'POST'])
+    def edit_client(client_id: int):
+        """
+        Страница редактирования данных клиента.
+        
+        GET: отображает форму редактирования с текущими данными
+        POST: обрабатывает отправленную форму с обновленными данными
+        
+        Args:
+            client_id: ID клиента для редактирования
+            
+        Returns:
+            На GET: HTML форма редактирования с текущими данными
+            На POST успешное обновление: редирект на главную
+            На POST ошибка валидации: форма с сообщениями об ошибках
+        """
+        if request.method == 'POST':
+            # Собираем новые данные из формы
+            form_data = {
+                'last_name': request.form.get('last_name', ''),
+                'first_name': request.form.get('first_name', ''),
+                'patronymic': request.form.get('patronymic', ''),
+                'phone': request.form.get('phone', ''),
+                'email': request.form.get('email', ''),
+                'passport_series': request.form.get('passport_series', ''),
+                'passport_number': request.form.get('passport_number', ''),
+                'zip_code': request.form.get('zip_code', ''),
+                'city': request.form.get('city', ''),
+                'street': request.form.get('street', ''),
+                'house': request.form.get('house', ''),
+                'total_spending': request.form.get('total_spending', '0.00'),
+            }
+            
+            # Пытаемся обновить клиента
+            result = edit_controller.update_client(client_id, form_data)
+            
+            if result is True:
+                # Успешное обновление, редирект на главную
+                return redirect(url_for('index'))
+            else:
+                # Ошибка валидации, возвращаем форму с ошибками
+                return render_template_string(result)
+        
+        # GET: отображаем форму редактирования
+        return render_template_string(edit_controller.get_edit_form(client_id))
     
     return app
 
