@@ -1,6 +1,6 @@
 from typing import Optional, List, Any
-from src.client_rep_base import Client_rep_base
-from src.client import Client, ClientShort
+from src.repositories.client_rep_base import Client_rep_base
+from src.models.client import Client, ClientShort
 
 
 class Client_rep_file_decorator:

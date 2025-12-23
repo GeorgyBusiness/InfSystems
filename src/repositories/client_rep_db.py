@@ -1,6 +1,6 @@
 from typing import Optional, List
-from src.client import Client, ClientShort
-from src.db_manager import DB_manager
+from src.models.client import Client, ClientShort
+from src.core.db_manager import DB_manager
 
 
 class Client_rep_db:
@@ -207,3 +207,4 @@ class Client_rep_db:
         except Exception as e:
             print(f"Ошибка при подсчете клиентов: {e}")
             return 0
+

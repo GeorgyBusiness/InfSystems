@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict, Any, Tuple
-from src.client_rep_db import Client_rep_db
-from src.client import Client, ClientShort
+from src.repositories.client_rep_db import Client_rep_db
+from src.models.client import Client, ClientShort
 
 
 class Client_rep_db_decorator:
@@ -13,7 +13,7 @@ class Client_rep_db_decorator:
     
     def __init__(self, repo: Client_rep_db):
         """
-        Инициализирует декоратор с объектом репозитория.
+        Инициализирует декоратор с объектом репозитория БД.
         
         Args:
             repo: объект Client_rep_db для работы с БД

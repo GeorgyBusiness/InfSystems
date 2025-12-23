@@ -1,6 +1,7 @@
-from src.client import Client
-from src.client_rep_db import Client_rep_db
-from src.db_manager import DB_manager
+from src.models.client import Client
+from src.repositories.client_rep_db import Client_rep_db
+from src.core.db_manager import DB_manager
+
 
 def test_database():
     # 1. Твои параметры подключения (замени на свои)
@@ -62,6 +63,7 @@ def test_database():
 
     except Exception as e:
         print(f"❌ Произошла ошибка: {e}")
+
 
 if __name__ == "__main__":
     test_database()

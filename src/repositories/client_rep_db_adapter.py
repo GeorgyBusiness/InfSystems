@@ -1,7 +1,7 @@
 from typing import List, Optional
-from src.client_rep_base import Client_rep_base
-from src.client_rep_db import Client_rep_db
-from src.client import Client, ClientShort
+from src.repositories.client_rep_base import Client_rep_base
+from src.repositories.client_rep_db import Client_rep_db
+from src.models.client import Client, ClientShort
 
 
 class Client_rep_db_adapter(Client_rep_base):

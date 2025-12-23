@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import os
 from typing import Optional, List
-from src.client import Client, ClientShort
+from src.models.client import Client, ClientShort
 
 
 class Client_rep_base(ABC):

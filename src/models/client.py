@@ -393,3 +393,4 @@ class ClientShort(ClientBase):
             f"Связь: {self.contact}, "
             f"Баланс: {self.total_spending}"
         )
+

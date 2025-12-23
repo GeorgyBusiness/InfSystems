@@ -1,20 +1,20 @@
-import json
+import yaml
 import os
-from src.client_rep_base import Client_rep_base
-from src.client import Client
+from src.repositories.client_rep_base import Client_rep_base
+from src.models.client import Client
 
 
-class Client_rep_json(Client_rep_base):
+class Client_rep_yaml(Client_rep_base):
     """
-    Класс для управления коллекцией объектов Client с сохранением в JSON формате.
+    Класс для управления коллекцией объектов Client с сохранением в YAML формате.
     
     Наследует общую логику от Client_rep_base и реализует специфичные методы
-    для работы с JSON.
+    для работы с YAML.
     """
     
     def _load_from_file(self) -> None:
         """
-        Загружает данные из JSON файла в приватный список _clients.
+        Загружает данные из YAML файла в приватный список _clients.
         
         Если файл не найден или пуст, инициализирует пустой список.
         """
@@ -24,13 +24,11 @@ class Client_rep_json(Client_rep_base):
         
         try:
             with open(self.file_path, 'r', encoding='utf-8') as f:
-                content = f.read().strip()
-                if not content:
-                    self._clients = []
-                    return
-                
-                data = json.loads(content)
+                data = yaml.safe_load(f)
                 self._clients = []
+                
+                if data is None:
+                    return
                 
                 if isinstance(data, list):
                     for client_dict in data:
@@ -39,13 +37,13 @@ class Client_rep_json(Client_rep_base):
                             self._clients.append(client)
                         except (ValueError, TypeError) as e:
                             print(f"Ошибка при загрузке клиента: {e}")
-        except (json.JSONDecodeError, IOError) as e:
+        except (yaml.YAMLError, IOError) as e:
             print(f"Ошибка при чтении файла {self.file_path}: {e}")
             self._clients = []
     
     def _save_to_file(self) -> None:
         """
-        Сохраняет всю коллекцию _clients в JSON файл.
+        Сохраняет всю коллекцию _clients в YAML файл.
         
         Преобразует объекты Client в словари перед сохранением.
         """
@@ -71,6 +69,7 @@ class Client_rep_json(Client_rep_base):
         try:
             os.makedirs(os.path.dirname(self.file_path) or '.', exist_ok=True)
             with open(self.file_path, 'w', encoding='utf-8') as f:
-                json.dump(clients_data, f, ensure_ascii=False, indent=2)
+                yaml.dump(clients_data, f, allow_unicode=True, sort_keys=False)
         except IOError as e:
             print(f"Ошибка при сохранении в файл {self.file_path}: {e}")
+
