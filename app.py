@@ -64,10 +64,19 @@ def create_app() -> Flask:
         """
         Главная страница со списком всех клиентов.
         
+        Поддерживает параметры запроса для фильтрации и сортировки:
+        - filter_city: фильтр по городу
+        - sort_by: поле для сортировки (id, last_name, total_spending)
+        - sort_order: порядок сортировки (ASC или DESC)
+        
         Returns:
             HTML представление главной страницы
         """
-        return render_template_string(controller.index())
+        # Получаем параметры запроса
+        params = request.args.to_dict() if request.args else None
+        
+        # Передаем параметры в контроллер
+        return render_template_string(controller.index(params))
     
     @app.route('/client/<int:client_id>')
     def show_client(client_id: int):

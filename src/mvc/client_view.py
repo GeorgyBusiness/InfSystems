@@ -168,6 +168,36 @@ class ClientView(AbstractObserver):
     <div style="margin-bottom: 20px;">
         <a href="/add" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; border-radius: 4px; text-decoration: none; font-weight: 600;">+ Добавить нового клиента</a>
     </div>
+    
+    <div style="background-color: white; padding: 15px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); margin-bottom: 20px;">
+        <form method="GET" action="/" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
+            <div style="display: flex; flex-direction: column;">
+                <label for="filter_city" style="font-weight: 600; margin-bottom: 5px; color: #333; font-size: 14px;">Фильтр по городу:</label>
+                <input type="text" id="filter_city" name="filter_city" placeholder="Например: Москва" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 150px;">
+            </div>
+            
+            <div style="display: flex; flex-direction: column;">
+                <label for="sort_by" style="font-weight: 600; margin-bottom: 5px; color: #333; font-size: 14px;">Сортировать по:</label>
+                <select id="sort_by" name="sort_by" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">-- Выберите поле --</option>
+                    <option value="id">ID</option>
+                    <option value="last_name">Фамилия</option>
+                    <option value="total_spending">Траты</option>
+                </select>
+            </div>
+            
+            <div style="display: flex; flex-direction: column;">
+                <label for="sort_order" style="font-weight: 600; margin-bottom: 5px; color: #333; font-size: 14px;">Порядок:</label>
+                <select id="sort_order" name="sort_order" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="ASC">По возрастанию (ASC)</option>
+                    <option value="DESC">По убыванию (DESC)</option>
+                </select>
+            </div>
+            
+            <button type="submit" style="padding: 8px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">🔍 Применить</button>
+            <a href="/" style="padding: 8px 20px; background-color: #6c757d; color: white; border-radius: 4px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center;">✕ Сбросить</a>
+        </form>
+    </div>
     <table>
         <thead>
             <tr>

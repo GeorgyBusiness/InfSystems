@@ -5,10 +5,11 @@
 обработкой запросов пользователя.
 """
 
-from typing import Optional, Dict, List, Union
+from typing import Optional, Dict, List, Union, Any
 from src.repositories.client_rep_base import Client_rep_base
 from src.mvc.client_view import ClientView
 from src.models.client import Client
+from src.decorators.client_rep_db_decorator import Client_rep_db_decorator
 
 
 class ClientController:
@@ -33,19 +34,43 @@ class ClientController:
         # Подписываем представление на изменения в репозитории
         self.repo.add_observer(self.view)
     
-    def index(self) -> str:
+    def index(self, params: Optional[Dict[str, Any]] = None) -> str:
         """
         Обрабатывает главную страницу с списком клиентов.
         
-        Получает первую страницу клиентов (по 10 на странице) из репозитория
-        и возвращает HTML представление.
+        Получает первую страницу клиентов (по 10 на странице) из репозитория.
+        Если переданы параметры фильтрации/сортировки, использует декоратор.
         
+        Args:
+            params: Словарь параметров запроса (filter_city, sort_by, sort_order)
+            
         Returns:
             HTML-строка главной страницы
         """
         try:
+            # Определяем, нужен ли декоратор
+            repo_to_use = self.repo
+            
+            if params:
+                # Получаем параметры фильтрации и сортировки
+                filter_city = params.get('filter_city', '').strip()
+                sort_by = params.get('sort_by', '').strip()
+                sort_order = params.get('sort_order', 'ASC').strip().upper()
+                
+                # Если есть параметры, создаем декоратор
+                if filter_city or sort_by:
+                    repo_to_use = Client_rep_db_decorator(self.repo)
+                    
+                    # Применяем фильтр если есть
+                    if filter_city:
+                        repo_to_use.set_filter('city', filter_city)
+                    
+                    # Применяем сортировку если есть
+                    if sort_by:
+                        repo_to_use.set_sort(sort_by, sort_order)
+            
             # Получаем первую страницу с 10 клиентами
-            clients_short = self.repo.get_k_n_short_list(k=1, n=10)
+            clients_short = repo_to_use.get_k_n_short_list(k=1, n=10)
             
             # Уведомляем наблюдателей об обновлении данных
             self.repo.notify(clients_short)
