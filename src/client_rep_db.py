@@ -1,26 +1,24 @@
-import psycopg2
-from psycopg2.extras import RealDictCursor
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from src.client import Client, ClientShort
+from src.db_manager import DB_manager
 
 
 class Client_rep_db:
     """
     Класс для управления коллекцией объектов Client в PostgreSQL базе данных.
     
-    Работает напрямую с таблицей clients в базе данных,
-    предоставляя CRUD операции и функции поиска/сортировки.
+    Работает через DB_manager для выполнения SQL запросов,
+    предоставляя CRUD операции и функции поиска.
     """
     
-    def __init__(self, db_params: Dict[str, Any]):
+    def __init__(self, db_manager: DB_manager):
         """
-        Инициализирует репозиторий с параметрами подключения к БД.
+        Инициализирует репозиторий с экземпляром DB_manager.
         
         Args:
-            db_params: словарь с параметрами подключения
-                      (host, user, password, dbname, port - опционально)
+            db_manager: объект DB_manager (Singleton) для работы с БД
         """
-        self.conn = psycopg2.connect(**db_params)
+        self.db_manager = db_manager
     
     def get_by_id(self, client_id: int) -> Optional[Client]:
         """
@@ -33,14 +31,17 @@ class Client_rep_db:
             Client объект или None
         """
         try:
-            with self.conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute("SELECT * FROM clients WHERE id = %s", (client_id,))
-                row = cursor.fetchone()
-                
-                if row:
-                    return Client(**dict(row))
-                return None
-        except psycopg2.Error as e:
+            row = self.db_manager.execute_query_single(
+                "SELECT * FROM clients WHERE id = %s",
+                (client_id,)
+            )
+            
+            if row:
+                row = dict(row)
+                row['total_spending'] = float(row['total_spending'])
+                return Client(**row)
+            return None
+        except Exception as e:
             print(f"Ошибка при выборе клиента по ID: {e}")
             return None
     
@@ -65,16 +66,22 @@ class Client_rep_db:
         offset = (k - 1) * n
         
         try:
-            with self.conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(
-                    "SELECT * FROM clients ORDER BY id LIMIT %s OFFSET %s",
-                    (n, offset)
-                )
-                rows = cursor.fetchall()
-                
-                clients = [Client(**dict(row)) for row in rows]
-                return [ClientShort(client) for client in clients]
-        except psycopg2.Error as e:
+            rows = self.db_manager.execute_query(
+                "SELECT * FROM clients ORDER BY id LIMIT %s OFFSET %s",
+                (n, offset),
+                fetch=True
+            )
+            
+            if not rows:
+                return []
+            
+            clients = []
+            for row in rows:
+                row = dict(row)
+                row['total_spending'] = float(row['total_spending'])
+                clients.append(Client(**row))
+            return [ClientShort(client) for client in clients]
+        except Exception as e:
             print(f"Ошибка при получении списка клиентов: {e}")
             return []
     
@@ -89,36 +96,33 @@ class Client_rep_db:
             client: объект Client для добавления
         """
         try:
-            with self.conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(
-                    """INSERT INTO clients 
-                       (last_name, first_name, patronymic, phone, email, 
-                        passport_series, passport_number, zip_code, city, 
-                        street, house, total_spending)
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                       RETURNING id""",
-                    (
-                        client.last_name,
-                        client.first_name,
-                        client.patronymic,
-                        client.phone,
-                        client.email,
-                        client.passport_series,
-                        client.passport_number,
-                        client.zip_code,
-                        client.city,
-                        client.street,
-                        client.house,
-                        client.total_spending,
-                    )
+            row = self.db_manager.execute_query_single(
+                """INSERT INTO clients 
+                   (last_name, first_name, patronymic, phone, email, 
+                    passport_series, passport_number, zip_code, city, 
+                    street, house, total_spending)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                   RETURNING id""",
+                (
+                    client.last_name,
+                    client.first_name,
+                    client.patronymic,
+                    client.phone,
+                    client.email,
+                    client.passport_series,
+                    client.passport_number,
+                    client.zip_code,
+                    client.city,
+                    client.street,
+                    client.house,
+                    client.total_spending,
                 )
-                result = cursor.fetchone()
-                if result:
-                    client.id = result['id']
-                
-                self.conn.commit()
-        except psycopg2.Error as e:
-            self.conn.rollback()
+            )
+            if row:
+                client.id = row['id']
+            
+            self.db_manager.conn.commit()
+        except Exception as e:
             print(f"Ошибка при добавлении клиента: {e}")
     
     def replace_by_id(self, client_id: int, new_client: Client) -> None:
@@ -133,7 +137,7 @@ class Client_rep_db:
             ValueError: если клиент с указанным ID не найден
         """
         try:
-            with self.conn.cursor() as cursor:
+            with self.db_manager.conn.cursor() as cursor:
                 cursor.execute(
                     """UPDATE clients 
                        SET last_name=%s, first_name=%s, patronymic=%s, phone=%s, 
@@ -161,9 +165,9 @@ class Client_rep_db:
                 if cursor.rowcount == 0:
                     raise ValueError(f"Клиент с ID {client_id} не найден")
                 
-                self.conn.commit()
-        except psycopg2.Error as e:
-            self.conn.rollback()
+                self.db_manager.conn.commit()
+        except Exception as e:
+            self.db_manager.conn.rollback()
             print(f"Ошибка при обновлении клиента: {e}")
     
     def delete_by_id(self, client_id: int) -> None:
@@ -177,15 +181,15 @@ class Client_rep_db:
             ValueError: если клиент с указанным ID не найден
         """
         try:
-            with self.conn.cursor() as cursor:
+            with self.db_manager.conn.cursor() as cursor:
                 cursor.execute("DELETE FROM clients WHERE id = %s", (client_id,))
                 
                 if cursor.rowcount == 0:
                     raise ValueError(f"Клиент с ID {client_id} не найден")
                 
-                self.conn.commit()
-        except psycopg2.Error as e:
-            self.conn.rollback()
+                self.db_manager.conn.commit()
+        except Exception as e:
+            self.db_manager.conn.rollback()
             print(f"Ошибка при удалении клиента: {e}")
     
     def get_count(self) -> int:
@@ -196,11 +200,10 @@ class Client_rep_db:
             int: количество клиентов
         """
         try:
-            with self.conn.cursor() as cursor:
+            with self.db_manager.conn.cursor() as cursor:
                 cursor.execute("SELECT COUNT(*) FROM clients")
                 result = cursor.fetchone()
                 return result[0] if result else 0
-        except psycopg2.Error as e:
+        except Exception as e:
             print(f"Ошибка при подсчете клиентов: {e}")
             return 0
-
