@@ -112,7 +112,12 @@ class ClientAddController:
         Returns:
             HTML-строка с пустой формой
         """
-        return self.view.render_add_client_page()
+        return self.view.render_client_form(
+            title="Добавление нового клиента",
+            button_text="✓ Создать",
+            action_url="/add",
+            client=None
+        )
     
     def save_client(self, form_data: Dict[str, str]) -> Union[bool, str]:
         """
@@ -192,17 +197,23 @@ class ClientAddController:
             error_message = str(e)
             errors.append(error_message)
             
-            # Возвращаем форму с ошибками и введенными данными
-            return self.view.render_add_client_page(
-                errors=errors,
-                form_data=form_data
+            # Возвращаем форму с ошибками
+            return self.view.render_client_form(
+                title="Добавление нового клиента",
+                button_text="✓ Создать",
+                action_url="/add",
+                client=None,
+                errors=errors
             )
         except Exception as e:
             # Неожиданная ошибка
             errors.append(f"Неожиданная ошибка: {str(e)}")
-            return self.view.render_add_client_page(
-                errors=errors,
-                form_data=form_data
+            return self.view.render_client_form(
+                title="Добавление нового клиента",
+                button_text="✓ Создать",
+                action_url="/add",
+                client=None,
+                errors=errors
             )
 
 
@@ -251,7 +262,12 @@ class ClientEditController:
             self.repo.notify(client)
             
             # Возвращаем форму редактирования
-            return self.view.render_edit_client_page(client)
+            return self.view.render_client_form(
+                title=f"Редактирование клиента (ID: {client.id})",
+                button_text="✓ Сохранить изменения",
+                action_url=f"/edit/{client.id}",
+                client=client
+            )
         except Exception as e:
             return f"<h1>Ошибка</h1><p>Не удалось загрузить форму редактирования: {e}</p>"
     
@@ -340,8 +356,11 @@ class ClientEditController:
             try:
                 current_client = self.repo.get_by_id(client_id)
                 if current_client:
-                    return self.view.render_edit_client_page(
-                        current_client,
+                    return self.view.render_client_form(
+                        title=f"Редактирование клиента (ID: {current_client.id})",
+                        button_text="✓ Сохранить изменения",
+                        action_url=f"/edit/{current_client.id}",
+                        client=current_client,
                         errors=errors
                     )
             except Exception:
@@ -355,8 +374,11 @@ class ClientEditController:
             try:
                 current_client = self.repo.get_by_id(client_id)
                 if current_client:
-                    return self.view.render_edit_client_page(
-                        current_client,
+                    return self.view.render_client_form(
+                        title=f"Редактирование клиента (ID: {current_client.id})",
+                        button_text="✓ Сохранить изменения",
+                        action_url=f"/edit/{current_client.id}",
+                        client=current_client,
                         errors=errors
                     )
             except Exception:

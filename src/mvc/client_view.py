@@ -248,19 +248,36 @@ class ClientView(AbstractObserver):
         
         return self._get_base_html(f'Клиент {client.last_name}', details_html)
     
-    def render_add_client_page(self, errors: Optional[List[str]] = None, form_data: Optional[Dict[str, str]] = None) -> str:
+    def render_client_form(self, title: str, button_text: str, action_url: str, client: Optional[Client] = None, errors: Optional[List[str]] = None) -> str:
         """
-        Генерирует HTML страницу с формой для добавления нового клиента.
+        Генерирует универсальную HTML форму для добавления или редактирования клиента.
+        
+        Параметры title, button_text и action_url позволяют переиспользовать форму
+        для разных операций (Add/Edit).
         
         Args:
+            title: Заголовок формы (например, "Добавление клиента" или "Редактирование клиента")
+            button_text: Текст на кнопке отправки (например, "Создать" или "Сохранить изменения")
+            action_url: URL для отправки формы (например, "/add" или "/edit/1")
+            client: Объект Client для предзаполнения формы (если None - форма пустая для добавления)
             errors: Список ошибок валидации (если есть)
-            form_data: Словарь с ранее введенными данными для восстановления при ошибке
             
         Returns:
-            HTML-строка с формой добавления клиента
+            HTML-строка с формой
         """
-        if form_data is None:
-            form_data = {}
+        # Если передан client, используем его данные; иначе пустые значения
+        last_name = client.last_name if client else ''
+        first_name = client.first_name if client else ''
+        patronymic = client.patronymic if client else ''
+        phone = client.phone if client else ''
+        email = client.email if client else ''
+        passport_series = client.passport_series if client else ''
+        passport_number = client.passport_number if client else ''
+        zip_code = str(client.zip_code) if client else ''
+        city = client.city if client else ''
+        street = client.street if client else ''
+        house = client.house if client else ''
+        total_spending = f"{client.total_spending:.2f}" if client else '0.00'
         
         # Генерируем блок ошибок, если они есть
         errors_html = ""
@@ -273,24 +290,10 @@ class ClientView(AbstractObserver):
         </ul>
     </div>"""
         
-        # Значения полей (используем введенные или пустые)
-        last_name = form_data.get('last_name', '')
-        first_name = form_data.get('first_name', '')
-        patronymic = form_data.get('patronymic', '')
-        phone = form_data.get('phone', '')
-        email = form_data.get('email', '')
-        passport_series = form_data.get('passport_series', '')
-        passport_number = form_data.get('passport_number', '')
-        zip_code = form_data.get('zip_code', '')
-        city = form_data.get('city', '')
-        street = form_data.get('street', '')
-        house = form_data.get('house', '')
-        total_spending = form_data.get('total_spending', '0.00')
-        
         form_html = f"""<a href="/" style="display: inline-block; margin-bottom: 20px; color: #007bff; font-weight: 500;">← Вернуться на главную</a>
-    <h1>Добавление нового клиента</h1>
+    <h1>{title}</h1>
     {errors_html}
-    <form method="POST" action="/add" style="background-color: white; padding: 20px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+    <form method="POST" action="{action_url}" style="background-color: white; padding: 20px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
         <fieldset style="border: none; margin: 0; padding: 0;">
             <legend style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #333;">Личные данные</legend>
             
@@ -369,123 +372,11 @@ class ClientView(AbstractObserver):
         </fieldset>
         
         <div style="margin-top: 30px; display: flex; gap: 10px;">
-            <button type="submit" style="padding: 12px 30px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: 600; cursor: pointer;">✓ Сохранить клиента</button>
+            <button type="submit" style="padding: 12px 30px; background-color: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: 600; cursor: pointer;">✓ {button_text}</button>
             <a href="/" style="padding: 12px 30px; background-color: #6c757d; color: white; border-radius: 4px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center;">✕ Отмена</a>
         </div>
     </form>"""
         
-        return self._get_base_html('Добавление клиента', form_html)
-    
-    def render_edit_client_page(self, client: Client, errors: Optional[List[str]] = None) -> str:
-        """
-        Генерирует HTML страницу с формой для редактирования клиента.
-        
-        Форма предзаполнена текущими данными клиента.
-        
-        Args:
-            client: Объект Client с текущими данными
-            errors: Список ошибок валидации (если есть)
-            
-        Returns:
-            HTML-строка с формой редактирования
-        """
-        # Генерируем блок ошибок, если они есть
-        errors_html = ""
-        if errors:
-            errors_list = "".join([f"<li>{error}</li>" for error in errors])
-            errors_html = f"""<div style="background-color: #f8d7da; color: #721c24; padding: 12px; border: 1px solid #f5c6cb; border-radius: 4px; margin-bottom: 20px;">
-        <strong>❌ Ошибки при заполнении формы:</strong>
-        <ul style="margin: 10px 0 0 0;">
-            {errors_list}
-        </ul>
-    </div>"""
-        
-        form_html = f"""<a href="/" style="display: inline-block; margin-bottom: 20px; color: #007bff; font-weight: 500;">← Вернуться на главную</a>
-    <h1>Редактирование клиента (ID: {client.id})</h1>
-    {errors_html}
-    <form method="POST" action="/edit/{client.id}" style="background-color: white; padding: 20px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-        <fieldset style="border: none; margin: 0; padding: 0;">
-            <legend style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #333;">Личные данные</legend>
-            
-            <div style="margin-bottom: 15px;">
-                <label for="last_name" style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Фамилия *</label>
-                <input type="text" id="last_name" name="last_name" value="{client.last_name}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <label for="first_name" style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Имя *</label>
-                <input type="text" id="first_name" name="first_name" value="{client.first_name}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <label for="patronymic" style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Отчество</label>
-                <input type="text" id="patronymic" name="patronymic" value="{client.patronymic}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <label for="phone" style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Телефон (7XXXXXXXXXX) *</label>
-                <input type="tel" id="phone" name="phone" value="{client.phone}" placeholder="79991234567" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <label for="email" style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Email *</label>
-                <input type="email" id="email" name="email" value="{client.email}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-            </div>
-        </fieldset>
-        
-        <fieldset style="border: none; margin: 30px 0 0 0; padding: 20px 0 0 0; border-top: 2px solid #eee;">
-            <legend style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #333;">Паспортные данные</legend>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                <div>
-                    <label for="passport_series" style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Серия (4 цифры) *</label>
-                    <input type="text" id="passport_series" name="passport_series" value="{client.passport_series}" placeholder="1234" maxlength="4" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-                </div>
-                <div>
-                    <label for="passport_number" style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Номер (6 цифр) *</label>
-                    <input type="text" id="passport_number" name="passport_number" value="{client.passport_number}" placeholder="567890" maxlength="6" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-                </div>
-            </div>
-        </fieldset>
-        
-        <fieldset style="border: none; margin: 30px 0 0 0; padding: 20px 0 0 0; border-top: 2px solid #eee;">
-            <legend style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #333;">Адрес проживания</legend>
-            
-            <div style="margin-bottom: 15px;">
-                <label for="zip_code" style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Почтовый индекс (6 цифр) *</label>
-                <input type="text" id="zip_code" name="zip_code" value="{client.zip_code}" placeholder="123456" maxlength="6" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <label for="city" style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Город *</label>
-                <input type="text" id="city" name="city" value="{client.city}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <label for="street" style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Улица *</label>
-                <input type="text" id="street" name="street" value="{client.street}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <label for="house" style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Номер дома *</label>
-                <input type="text" id="house" name="house" value="{client.house}" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-            </div>
-        </fieldset>
-        
-        <fieldset style="border: none; margin: 30px 0 0 0; padding: 20px 0 0 0; border-top: 2px solid #eee;">
-            <legend style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #333;">Финансовая информация</legend>
-            
-            <div style="margin-bottom: 15px;">
-                <label for="total_spending" style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Общие траты (₽) *</label>
-                <input type="number" id="total_spending" name="total_spending" value="{client.total_spending:.2f}" step="0.01" min="0" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-            </div>
-        </fieldset>
-        
-        <div style="margin-top: 30px; display: flex; gap: 10px;">
-            <button type="submit" style="padding: 12px 30px; background-color: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: 600; cursor: pointer;">✓ Сохранить изменения</button>
-            <a href="/" style="padding: 12px 30px; background-color: #6c757d; color: white; border-radius: 4px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center;">✕ Отмена</a>
-        </div>
-    </form>"""
-        
-        return self._get_base_html(f'Редактирование клиента {client.last_name}', form_html)
+        return self._get_base_html(title, form_html)
+
 
