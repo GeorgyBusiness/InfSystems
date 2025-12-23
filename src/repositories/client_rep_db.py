@@ -89,13 +89,18 @@ class Client_rep_db:
         """
         Добавляет новый объект Client в БД.
 
-        База данных генерирует ID автоматически. Полученный ID записывается
-        в объект client.
+        Важно: SQL-запрос НЕ включает колонку 'id' в список вставляемых полей,
+        так как она генерируется базой данных автоматически через SERIAL.
+        
+        После успешной вставки полученный ID через RETURNING присваивается
+        обратно в объект client через client.id = row['id'].
 
         Args:
             client: объект Client для добавления
         """
         try:
+            # INSERT НЕ включает id - база генерирует его автоматически
+            # RETURNING id возвращает сгенерированный ID
             row = self.db_manager.execute_query_single(
                 """INSERT INTO clients 
                    (last_name, first_name, patronymic, phone, email, 
@@ -118,6 +123,7 @@ class Client_rep_db:
                     client.total_spending,
                 )
             )
+            # Присваиваем полученный ID обратно в объект
             if row:
                 client.id = row['id']
 

@@ -2,9 +2,10 @@ from abc import ABC, abstractmethod
 import os
 from typing import Optional, List
 from src.models.client import Client, ClientShort
+from src.mvc.observer import Subject
 
 
-class Client_rep_base(ABC):
+class Client_rep_base(Subject, ABC):
     """
     Абстрактный базовый класс для управления коллекцией объектов Client.
 
@@ -13,16 +14,18 @@ class Client_rep_base(ABC):
     для работы с конкретными форматами (JSON, YAML и т.д.).
     """
 
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: Optional[str] = None):
         """
         Инициализирует репозиторий с путем к файлу.
 
         Args:
-            file_path: путь к файлу для хранения данных
+            file_path: путь к файлу для хранения данных (опционально, для адаптеров БД)
         """
+        super().__init__()
         self.file_path = file_path
         self._clients: List[Client] = []
-        self._load_from_file()
+        if file_path is not None:
+            self._load_from_file()
 
     @abstractmethod
     def _load_from_file(self) -> None:
@@ -61,16 +64,20 @@ class Client_rep_base(ABC):
         """
         Добавляет новый объект Client в список.
 
-        Генерирует новый ID (максимальный существующий + 1),
-        устанавливает его объекту и сохраняет в файл.
+        Для файловых репозиториев генерирует новый ID вычислением
+        (максимальный существующий ID + 1). Для БД репозиториев (adapter)
+        этот метод не вызывается напрямую, вместо этого используется
+        Client_rep_db.add() который получает ID через RETURNING.
 
         Args:
             client: объект Client для добавления
         """
         if self._clients:
+            # Находим максимальный ID в списке
             max_id = max(c.id for c in self._clients)
             client.id = max_id + 1
         else:
+            # Если список пуст, начиная с ID = 1
             client.id = 1
 
         self._clients.append(client)

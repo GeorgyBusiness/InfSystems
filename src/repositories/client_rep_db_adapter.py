@@ -19,9 +19,9 @@ class Client_rep_db_adapter(Client_rep_base):
         Args:
             db_repository: объект Client_rep_db для работы с базой данных
         """
+        # Вызываем super().__init__(None) ПЕРВЫМ ДЕЛОМ для инициализации Subject
+        super().__init__(None)
         self.db_repository = db_repository
-        # Инициализируем список (хотя БД не использует его напрямую)
-        self._clients: List[Client] = []
 
     def _load_from_file(self) -> None:
         """
