@@ -6,27 +6,27 @@ from src.core.db_manager import DB_manager
 class Client_rep_db:
     """
     Класс для управления коллекцией объектов Client в PostgreSQL базе данных.
-    
+
     Работает через DB_manager для выполнения SQL запросов,
     предоставляя CRUD операции и функции поиска.
     """
-    
+
     def __init__(self, db_manager: DB_manager):
         """
         Инициализирует репозиторий с экземпляром DB_manager.
-        
+
         Args:
             db_manager: объект DB_manager (Singleton) для работы с БД
         """
         self.db_manager = db_manager
-    
+
     def get_by_id(self, client_id: int) -> Optional[Client]:
         """
         Возвращает объект Client по ID из БД или None, если не найден.
-        
+
         Args:
             client_id: уникальный идентификатор клиента
-            
+
         Returns:
             Client объект или None
         """
@@ -35,7 +35,7 @@ class Client_rep_db:
                 "SELECT * FROM clients WHERE id = %s",
                 (client_id,)
             )
-            
+
             if row:
                 row = dict(row)
                 row['total_spending'] = float(row['total_spending'])
@@ -44,17 +44,17 @@ class Client_rep_db:
         except Exception as e:
             print(f"Ошибка при выборе клиента по ID: {e}")
             return None
-    
+
     def get_k_n_short_list(self, k: int, n: int) -> List[ClientShort]:
         """
         Возвращает список из n объектов класса ClientShort для k-й страницы.
-        
+
         Использует LIMIT и OFFSET для постраничного получения данных из БД.
-        
+
         Args:
             k: номер страницы (начиная с 1)
             n: размер страницы (количество элементов)
-            
+
         Returns:
             Список объектов ClientShort размером до n элементов
         """
@@ -62,19 +62,19 @@ class Client_rep_db:
             raise ValueError("Номер страницы должен быть >= 1")
         if n < 1:
             raise ValueError("Размер страницы должен быть >= 1")
-        
+
         offset = (k - 1) * n
-        
+
         try:
             rows = self.db_manager.execute_query(
                 "SELECT * FROM clients ORDER BY id LIMIT %s OFFSET %s",
                 (n, offset),
                 fetch=True
             )
-            
+
             if not rows:
                 return []
-            
+
             clients = []
             for row in rows:
                 row = dict(row)
@@ -84,14 +84,14 @@ class Client_rep_db:
         except Exception as e:
             print(f"Ошибка при получении списка клиентов: {e}")
             return []
-    
+
     def add(self, client: Client) -> None:
         """
         Добавляет новый объект Client в БД.
-        
+
         База данных генерирует ID автоматически. Полученный ID записывается
         в объект client.
-        
+
         Args:
             client: объект Client для добавления
         """
@@ -120,19 +120,19 @@ class Client_rep_db:
             )
             if row:
                 client.id = row['id']
-            
+
             self.db_manager.conn.commit()
         except Exception as e:
             print(f"Ошибка при добавлении клиента: {e}")
-    
+
     def replace_by_id(self, client_id: int, new_client: Client) -> None:
         """
         Обновляет данные клиента по ID в БД.
-        
+
         Args:
             client_id: ID клиента для обновления
             new_client: новый объект Client с новыми данными
-            
+
         Raises:
             ValueError: если клиент с указанным ID не найден
         """
@@ -161,41 +161,41 @@ class Client_rep_db:
                         client_id,
                     )
                 )
-                
+
                 if cursor.rowcount == 0:
                     raise ValueError(f"Клиент с ID {client_id} не найден")
-                
+
                 self.db_manager.conn.commit()
         except Exception as e:
             self.db_manager.conn.rollback()
             print(f"Ошибка при обновлении клиента: {e}")
-    
+
     def delete_by_id(self, client_id: int) -> None:
         """
         Удаляет клиента из БД по ID.
-        
+
         Args:
             client_id: ID клиента для удаления
-            
+
         Raises:
             ValueError: если клиент с указанным ID не найден
         """
         try:
             with self.db_manager.conn.cursor() as cursor:
                 cursor.execute("DELETE FROM clients WHERE id = %s", (client_id,))
-                
+
                 if cursor.rowcount == 0:
                     raise ValueError(f"Клиент с ID {client_id} не найден")
-                
+
                 self.db_manager.conn.commit()
         except Exception as e:
             self.db_manager.conn.rollback()
             print(f"Ошибка при удалении клиента: {e}")
-    
+
     def get_count(self) -> int:
         """
         Возвращает общее количество клиентов в БД.
-        
+
         Returns:
             int: количество клиентов
         """
@@ -207,4 +207,3 @@ class Client_rep_db:
         except Exception as e:
             print(f"Ошибка при подсчете клиентов: {e}")
             return 0
-

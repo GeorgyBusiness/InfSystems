@@ -5,19 +5,19 @@ import json
 class ClientBase:
     """
     Базовый класс для всех клиентских сущностей.
-    
+
     Содержит общую функциональность: управление ID и статические методы валидации.
     """
-    
+
     def __init__(self, id: int):
         """
         Инициализирует базовый объект с ID.
-        
+
         Args:
             id: уникальный идентификатор клиента
         """
         self.id = id
-    
+
     # Статические методы валидации
     @staticmethod
     def validate_email(email: str) -> bool:
@@ -77,7 +77,7 @@ class Client(ClientBase):
     ):
         # Вызываем конструктор родителя для инициализации id
         super().__init__(id)
-        
+
         # Используем свойства (сеттеры) для автоматической валидации
         self.last_name = last_name
         self.first_name = first_name
@@ -95,7 +95,7 @@ class Client(ClientBase):
     def __repr__(self) -> str:
         """
         Возвращает строку, которая выглядит как вызов конструктора.
-        
+
         Returns:
             str: представление объекта в виде "Client(id=1, last_name='Ivanov', ...)"
         """
@@ -121,10 +121,10 @@ class Client(ClientBase):
     def from_json(cls, json_str: str):
         """
         Создает объект Client из JSON строки.
-        
+
         Args:
             json_str: JSON строка с данными клиента
-            
+
         Returns:
             Client: новый объект клиента
         """
@@ -135,19 +135,19 @@ class Client(ClientBase):
     def from_string(cls, str_data: str, delimiter: str = ','):
         """
         Создает объект Client из строки с разделителем.
-        
+
         Args:
             str_data: строка с данными в формате "id,last_name,first_name,..."
             delimiter: разделитель (по умолчанию запятая)
-            
+
         Returns:
             Client: новый объект клиента
         """
         parts = str_data.split(delimiter)
-        
+
         if len(parts) != 13:
             raise ValueError(f"Ожидается 13 полей, получено: {len(parts)}")
-        
+
         # Приводим типы данных
         return cls(
             id=int(parts[0]),
@@ -311,7 +311,7 @@ class Client(ClientBase):
             full_name = f"{self.last_name} {self.first_name} {self.patronymic}"
         else:
             full_name = f"{self.last_name} {self.first_name}"
-        
+
         return (
             f"Client ID: {self.id}\n"
             f"ФИО: {full_name}\n"
@@ -326,12 +326,12 @@ class Client(ClientBase):
         """Сравнивает два объекта Client на равенство."""
         if not isinstance(other, Client):
             return False
-        
+
         # Если у обоих объектов есть валидный id, сравниваем по id
         if hasattr(self, '_id') and hasattr(other, '_id'):
             if self._id is not None and self._id > 0 and other._id is not None and other._id > 0:
                 return self._id == other._id
-        
+
         # Иначе сравниваем по email и phone (уникальные идентификаторы)
         return self.email == other.email and self.phone == other.phone
 
@@ -339,23 +339,23 @@ class Client(ClientBase):
 class ClientShort(ClientBase):
     """
     Краткая версия данных клиента для упрощенного представления.
-    
+
     Содержит только основную информацию: ID, ФИО (сокращенно),
     один контакт и сумму трат.
     """
-    
+
     def __init__(self, client: Client):
         """
         Создает краткую версию клиента.
-        
+
         Args:
             client: объект типа Client
         """
         # Вызываем конструктор родителя для инициализации id
         super().__init__(client.id)
-        
+
         self._total_spending = client.total_spending
-        
+
         # Формируем полное имя в виде "Фамилия И.О." или "Фамилия И."
         if client.patronymic:
             # Если есть отчество: "Фамилия И.О."
@@ -367,25 +367,25 @@ class ClientShort(ClientBase):
         else:
             # Если отчества нет: "Фамилия И."
             self._fullname = f"{client.last_name} {client.first_name[0]}."
-        
+
         # Берем телефон, если его нет (что невозможно по валидации), берем email
         self._contact = client.phone if client.phone else client.email
-    
+
     @property
     def fullname(self) -> str:
         """Возвращает полное имя в формате 'Фамилия И.О.' или 'Фамилия И.'"""
         return self._fullname
-    
+
     @property
     def contact(self) -> str:
         """Возвращает основной контакт (телефон или email)."""
         return self._contact
-    
+
     @property
     def total_spending(self) -> float:
         """Возвращает общую сумму трат клиента."""
         return self._total_spending
-    
+
     def __str__(self) -> str:
         """Возвращает краткое строковое представление объекта ClientShort."""
         return (
@@ -393,4 +393,3 @@ class ClientShort(ClientBase):
             f"Связь: {self.contact}, "
             f"Баланс: {self.total_spending}"
         )
-

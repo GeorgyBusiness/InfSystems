@@ -1,7 +1,7 @@
-from src.client import Client
-from src.client_rep_db import Client_rep_db
-from src.client_rep_db_decorator import Client_rep_db_decorator
-from src.db_manager import DB_manager
+from src.models.client import Client
+from src.repositories.client_rep_db import Client_rep_db
+from src.decorators.client_rep_db_decorator import Client_rep_db_decorator
+from src.core.db_manager import DB_manager
 
 
 def test_decorator():

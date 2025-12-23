@@ -1,8 +1,8 @@
 import os
-from src.client import Client
-from src.client_rep_json import Client_rep_json
-from src.client_rep_yaml import Client_rep_yaml
-from src.client_rep_file_decorator import Client_rep_file_decorator
+from src.models.client import Client
+from src.repositories.client_rep_json import Client_rep_json
+from src.repositories.client_rep_yaml import Client_rep_yaml
+from src.decorators.client_rep_file_decorator import Client_rep_file_decorator
 
 
 def test_json_decorator():
